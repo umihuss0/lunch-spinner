@@ -198,13 +198,13 @@ else:
         st.session_state.cumulative_rotation_tracker = new_initial_rot
         st.rerun()
 st.sidebar.markdown("---")
-st.sidebar.caption("Made with ❤️ using Streamlit & Plotly.")
+st.sidebar.caption("Made by Umi")
 
 
 # ──────────────────────────────────────────────────────────────────────────────
 # MAIN PAGE - The Wheel and Results
 # ──────────────────────────────────────────────────────────────────────────────
-st.markdown("<h1 style='text-align: center; color: #1B4332;'>🥡 What's for Lunch? Spin the Wheel! 🥡</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center; color: #1B4332;'>What's for Lunch? Spin the Wheel!</h1>", unsafe_allow_html=True)
 st.markdown("---")
 
 food_names_original = list(st.session_state.food_dict.keys())

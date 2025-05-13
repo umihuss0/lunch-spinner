@@ -111,21 +111,22 @@ def build_initial_wheel_figure(rotation_angle_for_pie, labels_for_pie, current_c
     
     layout = go.Layout(
         showlegend=False,
-        margin=dict(l=15, r=15, t=30, b=15),
-        height=550,
+        # MOBLE-FIX: Reduced height and margins for better fit on smaller screens
+        margin=dict(l=10, r=10, t=25, b=10), # Was l=15, r=15, t=30, b=15
+        height=420, # Was 550, this is a key change for mobile
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         font=dict(family="Arial, sans-serif", size=12, color="#333333"),
         annotations=[
             go.layout.Annotation(
                 x=0.5, y=0.56, xref='paper', yref='paper', # Arrowhead position
-                ax=0.5, ay=0.66, axref='x domain', ayref='y domain', # Arrow tail position (CORRECTED)
+                ax=0.5, ay=0.66, axref='x domain', ayref='y domain', # Arrow tail position
                 showarrow=True, arrowcolor="#1E2A38", arrowwidth=3, arrowhead=2, arrowsize=1.3, text="",
             )
         ]
     )
     fig = go.Figure(data=[pie_trace], layout=layout)
-    fig.update_layout(autosize=True)
+    fig.update_layout(autosize=True) # Good for responsiveness
     return fig
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -172,6 +173,7 @@ if not st.session_state.food_dict:
     st.sidebar.info("No restaurants configured. Add some to spin!")
 else:
     restaurants_to_delete = []
+    # Using a copy for iteration as we might modify the dict
     for r_name_loop_var in list(st.session_state.food_dict.keys()):
         col1, col2 = st.sidebar.columns([0.85, 0.15], gap="small")
         with col1:
@@ -179,6 +181,7 @@ else:
                 for item in st.session_state.food_dict.get(r_name_loop_var, []):
                     st.markdown(f"- {item}")
         with col2:
+            # Ensure unique key for delete button if names can be similar or re-added
             del_key = f"del_btn_{r_name_loop_var.replace(' ','_')}_{str(uuid.uuid4())[:4]}"
             if st.button("🗑️", key=del_key, help=f"Delete {r_name_loop_var}", use_container_width=True):
                 restaurants_to_delete.append(r_name_loop_var)
@@ -188,7 +191,7 @@ else:
             if r_name_to_del in st.session_state.food_dict:
                 del st.session_state.food_dict[r_name_to_del]
         st.session_state.last_pick = None 
-        if st.session_state.food_dict :
+        if st.session_state.food_dict: # Check if dict is not empty after deletions
              new_initial_rot = calculate_initial_rotation(st.session_state.food_dict)
         else:
             new_initial_rot = 90 # Default rotation if all restaurants are deleted
@@ -208,39 +211,38 @@ st.markdown("---")
 food_names_original = list(st.session_state.food_dict.keys())
 num_slices = len(food_names_original)
 
-# Robust check for number of slices
 if num_slices == 0 :
     st.error("🚨 No restaurants configured! Please add some via the sidebar to spin the wheel.")
     st.stop()
 elif num_slices == 1:
     st.warning("⚠️ Only one restaurant configured. Add at least one more to spin the wheel!")
-    # Allow app to continue to show the single option and allow adding more
-    # but disable spinning or show a message instead of the spin button.
 
 food_names_display = get_display_labels(food_names_original)
 current_colors = [PALETTE[i % len(PALETTE)] for i in range(num_slices)]
-slice_angle_degrees = 360 / num_slices if num_slices > 0 else 360 # Avoid division by zero if somehow num_slices is 0 here
+slice_angle_degrees = 360 / num_slices if num_slices > 0 else 360
 
 main_col1, main_col2 = st.columns([0.6, 0.4], gap="large")
 
 with main_col1:
-    st.markdown("####") 
-    if num_slices > 0: # Only build figure if there are slices
+    # MOBLE-FIX: Removed st.markdown("####") which added extra vertical space
+    if num_slices > 0:
         figure_to_display = build_initial_wheel_figure(
             st.session_state.current_pie_rotation_for_python_render,
             food_names_display,
             current_colors
         )
+        # use_container_width=True is good for responsiveness
         st.plotly_chart(figure_to_display, use_container_width=True, key=PLOTLY_CHART_KEY)
-    else: # Should be caught by earlier checks, but as a fallback
+    else:
         st.info("Add restaurants to see the wheel.")
 
 
 with main_col2:
-    st.markdown("##") 
+    # MOBLE-FIX: Removed st.markdown("##") which added extra vertical space before the button
+    # This helps the button be closer to the wheel when columns stack on mobile.
     if num_slices < 2:
         st.info("ℹ️ Add at least two restaurants to enable spinning.")
-    else: # Only show spin button if 2 or more options
+    else:
         if st.button("🎯 Spin the Wheel! 🎯", key="spin_button_main", use_container_width=True, type="primary", help="Click to find out your culinary fate!"):
             chosen_index = random.randrange(num_slices)
             st.session_state.last_pick = food_names_original[chosen_index]
@@ -256,7 +258,7 @@ with main_col2:
             st.session_state.cumulative_rotation_tracker = new_rotation_for_plotly_jump
             st.rerun()
 
-    st.markdown("---")
+    st.markdown("---") # This separator is fine
 
     if st.session_state.last_pick:
         st.markdown(f"<h2 style='text-align: center; color: #D00000;'>🎉 Today's Delicious Pick! 🎉</h2>", unsafe_allow_html=True)
@@ -289,7 +291,7 @@ with main_col2:
         if st.button("🧹 Clear Pick & Spin Again?", key="clear_pick_button", use_container_width=True):
             st.session_state.last_pick = None
             st.rerun()
-    elif num_slices >=2: # Only show this if spinning is possible
+    elif num_slices >=2:
         st.info("✨ Spin the wheel to discover your next meal! ✨")
     elif num_slices == 1:
         st.info(f"✨ Your only option is: **{food_names_original[0]}**! Add more to spin. ✨")

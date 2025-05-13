@@ -111,9 +111,8 @@ def build_initial_wheel_figure(rotation_angle_for_pie, labels_for_pie, current_c
     
     layout = go.Layout(
         showlegend=False,
-        # MOBLE-FIX: Reduced height and margins for better fit on smaller screens
-        margin=dict(l=10, r=10, t=25, b=10), # Was l=15, r=15, t=30, b=15
-        height=420, # Was 550, this is a key change for mobile
+        margin=dict(l=10, r=10, t=25, b=10), # Keep reduced margins
+        height=490, # DESKTOP/MOBILE COMPROMISE: Increased from 420, decreased from 550
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         font=dict(family="Arial, sans-serif", size=12, color="#333333"),
@@ -126,7 +125,9 @@ def build_initial_wheel_figure(rotation_angle_for_pie, labels_for_pie, current_c
         ]
     )
     fig = go.Figure(data=[pie_trace], layout=layout)
-    fig.update_layout(autosize=True) # Good for responsiveness
+    # autosize=True is generally good. If height is specified, it will respect height
+    # and autosize width when use_container_width=True in st.plotly_chart.
+    fig.update_layout(autosize=True)
     return fig
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -173,7 +174,6 @@ if not st.session_state.food_dict:
     st.sidebar.info("No restaurants configured. Add some to spin!")
 else:
     restaurants_to_delete = []
-    # Using a copy for iteration as we might modify the dict
     for r_name_loop_var in list(st.session_state.food_dict.keys()):
         col1, col2 = st.sidebar.columns([0.85, 0.15], gap="small")
         with col1:
@@ -181,7 +181,6 @@ else:
                 for item in st.session_state.food_dict.get(r_name_loop_var, []):
                     st.markdown(f"- {item}")
         with col2:
-            # Ensure unique key for delete button if names can be similar or re-added
             del_key = f"del_btn_{r_name_loop_var.replace(' ','_')}_{str(uuid.uuid4())[:4]}"
             if st.button("🗑️", key=del_key, help=f"Delete {r_name_loop_var}", use_container_width=True):
                 restaurants_to_delete.append(r_name_loop_var)
@@ -191,10 +190,10 @@ else:
             if r_name_to_del in st.session_state.food_dict:
                 del st.session_state.food_dict[r_name_to_del]
         st.session_state.last_pick = None 
-        if st.session_state.food_dict: # Check if dict is not empty after deletions
+        if st.session_state.food_dict :
              new_initial_rot = calculate_initial_rotation(st.session_state.food_dict)
         else:
-            new_initial_rot = 90 # Default rotation if all restaurants are deleted
+            new_initial_rot = 90 
         st.session_state.current_pie_rotation_for_python_render = new_initial_rot
         st.session_state.cumulative_rotation_tracker = new_initial_rot
         st.rerun()
@@ -224,22 +223,20 @@ slice_angle_degrees = 360 / num_slices if num_slices > 0 else 360
 main_col1, main_col2 = st.columns([0.6, 0.4], gap="large")
 
 with main_col1:
-    # MOBLE-FIX: Removed st.markdown("####") which added extra vertical space
+    # Removed st.markdown("####") for tighter spacing, good for mobile
     if num_slices > 0:
         figure_to_display = build_initial_wheel_figure(
             st.session_state.current_pie_rotation_for_python_render,
             food_names_display,
             current_colors
         )
-        # use_container_width=True is good for responsiveness
         st.plotly_chart(figure_to_display, use_container_width=True, key=PLOTLY_CHART_KEY)
     else:
         st.info("Add restaurants to see the wheel.")
 
 
 with main_col2:
-    # MOBLE-FIX: Removed st.markdown("##") which added extra vertical space before the button
-    # This helps the button be closer to the wheel when columns stack on mobile.
+    # Removed st.markdown("##") for tighter spacing, good for mobile
     if num_slices < 2:
         st.info("ℹ️ Add at least two restaurants to enable spinning.")
     else:
@@ -258,7 +255,7 @@ with main_col2:
             st.session_state.cumulative_rotation_tracker = new_rotation_for_plotly_jump
             st.rerun()
 
-    st.markdown("---") # This separator is fine
+    st.markdown("---")
 
     if st.session_state.last_pick:
         st.markdown(f"<h2 style='text-align: center; color: #D00000;'>🎉 Today's Delicious Pick! 🎉</h2>", unsafe_allow_html=True)

@@ -47,6 +47,8 @@ DEFAULT_FOOD_CHOICES = {
     "Peri Peri Flamin Grill": ["Half spicy chicken"],
     "Eat Real Halal": ["Mixed over rice gyro"],
     "Karachi Kabab Boiz": ["Behari kebab roll", "Malai chicken roll"],
+    "Affy’s": ["Jalapeno Steak Penne"],
+    "Mahmoud's": ["Mixed platter over rice"],
     "McDonald’s": ["Filet-O-Fish"],
 }
 
